@@ -42,7 +42,7 @@ function getModels() {
  */
 function getModelsV2() {
   // Set up the options for the request
-  var apiKey = "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";
+  var apiKey = "{{insert API key}}";
 
   var options = {
     "method": "GET",
