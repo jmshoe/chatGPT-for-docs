@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        margin: 16px;
+      }
+      
+      label {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333333;
+      }
+      
+      input[type="text"] {
+        font-size: 14px;
+        padding: 8px;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        margin-bottom: 16px;
+      }
+      
+      input[type="button"] {
+        font-size: 14px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background-color: #0072C6;
+        color: #ffffff;
+        cursor: pointer;
+        margin-bottom: 16px;
+      }
+      
+      select {
+        font-size: 14px;
+        padding: 8px;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <form>
+      <label for="apiKey">API Key:</label>
+      <input type="text" id="apiKey" name="apiKey" value="">
+      <br>
+        
+      <label for="model">Model:</label>
+      <select id="model" name="model">
+        <option value="text-davinci-003">text-davinci-003</option>
+        <script>
+          google.script.run.withSuccessHandler(function(models) {
+            for (var i = 0; i < models.length; i++) {
+              var option = document.createElement("option");
+              option.value = models[i];
+              option.text = models[i];
+              document.getElementById("model").add(option);
+            }
+          }).getModelsV2();
+        </script>
+      </select>
+      <br>
+      <label for="temperature">Temperature:</label>
+      <select id="temperature" name="temperature">
+        <option value=0.5>0.5</option>
+        <script>
+          google.script.run.withSuccessHandler(function(temperature) {
+            for (var i = 0; i < temperature.length; i++) {
+              var option = document.createElement("option");
+              option.value = temperature[i];
+              option.text = temperature[i];
+              document.getElementById("temperature").add(option);
+            }
+          }).getTemperatures();
+        </script>
+      </select>
+      <br>
+      <label for="maxTokens">Max Tokens:</label>
+      <select id="maxTokens" name="maxTokens">
+        <option value=1000>1000</option>
+        <script>
+          google.script.run.withSuccessHandler(function(maxTokens) {
+            for (var i = 0; i < maxTokens.length; i++) {
+              var option = document.createElement("option");
+              option.value = maxTokens[i];
+              option.text = maxTokens[i];
+              document.getElementById("maxTokens").add(option);
+            }
+          }).getMaxTokens();
+        </script>
+      </select>
+      <br>
+      <div>
+        Highlight the text for the ChatGPT prompt.
+      </div>
+      <br>
+      <div class="block" id="button-bar">
+        <button class="blue" id="run-chatGPT">Send to ChatGPT</button>
+      </div>
+    </form>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+    /**
+     * On document load, assign click handlers to each button and try to load the
+     * user's origin and destination language preferences if previously set.
+     */
+    $(function() {
+      $('#run-chatGPT').click(runChatGPT);
+      google.script.run.withSuccessHandler(loadPreferences)
+            .withFailureHandler(showError).getPreferences();
+    });
+
+    /**
+     * Callback function that populates the origin and destination selection
+     * boxes with user preferences from the server.
+     *
+     * @param {Object} languagePrefs The saved origin and destination languages.
+     */
+    function loadPreferences(myApiKey) {
+
+      $('#apiKey').val(myApiKey.openaiApiKey);
+    }
+
+    /**
+     * Runs a server-side function to insert the translated text into the document
+     * at the user's cursor or selection.
+     */
+    function runChatGPT() {
+      this.disabled = true;
+      $('#error').remove();
+
+      const apiKey = $('#apiKey').val();
+
+      const myModel = $("#model").val().toString();
+      const myTemperature = parseFloat($("#temperature").val());
+      const myMaxTokens = parseInt($("#maxTokens").val());
+
+      console.log(myModel);
+      console.log(myTemperature);
+      console.log(myMaxTokens);
+
+      //const myModel = 'text-davinci-003';
+      //const myTemperature = 0.5;
+      //const myMaxTokens = 1000;
+
+      google.script.run
+              .withSuccessHandler(
+                      function(returnSuccess, element) {
+                        element.disabled = false;
+                      })
+              .withFailureHandler(
+                      function(msg, element) {
+                        showError(msg, $('#button-bar'));
+                        element.disabled = false;
+                      })
+              .withUserObject(this)
+              .chatGPT(myModel,myTemperature,myMaxTokens,apiKey);
+    }
+
+    
+  </script>
+  </body>
+</html>
+   
